@@ -19,9 +19,9 @@ public class Client {
      * @throws IOException
      * @throws InterruptedException
      */
-    public void fetchContent(String email_address, String api_key) throws IOException, InterruptedException {
+    public static Paste fetchContent(String email_address, String api_key) throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
-        String url = "https://haveibeenpwned.com/api/v3/pasteaccount/" + URLEncoder.encode(email_address, "UTF-8");
+        String url = "https://haveibeenpwned.com/api/v3/pasteaccount/" + email_address;
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url)).setHeader("hibp-api-key", api_key)
                 .GET()
@@ -33,9 +33,34 @@ public class Client {
                     .get()
                     .body();
             Paste email_breaches = new Gson().fromJson(response, Paste.class);
+//            System.out.println(response.headers());
             System.out.println(email_breaches); // Printing JSON object
+            return email_breaches;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Asset fetchPaste(String account, String api_key) throws IOException, InterruptedException {
+        var client = HttpClient.newHttpClient();
+        String url = "https://haveibeenpwned.com/api/v3/breachedaccount/" + account;
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url)).setHeader("hibp-api-key", api_key)
+                .GET()
+                .timeout(Duration.ofMillis(5000))
+                .build();
+
+        try {
+            var response = client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .get()
+                    .body();
+            Asset email_breaches = new Gson().fromJson(response, Asset.class);
+            System.out.println(email_breaches); // Printing JSON object
+            return email_breaches;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

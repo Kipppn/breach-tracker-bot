@@ -1,5 +1,7 @@
 package persistence;
 
+import java.util.Date;
+
 public class Asset {
      // Data Class Variables Mapped From JSON
      private String name;
@@ -60,6 +62,10 @@ public class Asset {
 
      public void setBreachData(String breachData) {
           this.breachData = breachData;
+     }
+
+     public String getBreachData() {
+          return breachData;
      }
 
      public String getDomain() {
