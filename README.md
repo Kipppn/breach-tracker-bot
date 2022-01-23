@@ -1,6 +1,5 @@
 # Breach Tracker Discord Bot
 
-## What it does
 
 Breach Tracker Bot is a discord bot that periodically sends information about any new breaches and pings any discord user in the server whose accounts or emails were in these breaches. 
 
