@@ -9,8 +9,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.temporal.ChronoUnit;
+
 public class BotListener implements EventListener {
-    String prefix = "!";
+    String prefix = "-";
     @Override
     public void onEvent(@NotNull GenericEvent event) {
         if (event instanceof ReadyEvent) {
@@ -22,30 +24,36 @@ public class BotListener implements EventListener {
         }
 
         if (event instanceof MessageReceivedEvent) {
-            // TODO: Implement PING command (for health check of bot)
             commandRouter((MessageReceivedEvent) event);
-//            String msg = ((MessageReceivedEvent) event).getMessage().getContentRaw();
         }
     }
 
-    public void commandRouter(MessageReceivedEvent event){
+    private void commandRouter(MessageReceivedEvent event){
         Message message = event.getMessage();
         String messageText = message.getContentRaw();
         if(!messageText.substring(0, 1).equals(prefix)){
             return;
         }
 
-        switch (messageText.toLowerCase()){
-            case "!help":
+        switch (messageText.toLowerCase()) {
+            case "-ping":
+                pingCommand(message);
+                break;
+            case "-help":
                 helpCommand(message);
-
+                break;
         }
-
-
-
     }
 
-    public void helpCommand(Message message){
+    /**
+     * @param message message sent by the Discord user
+     * Will return the message 'Pong' as a sign that the bot is up-and-running!
+     */
+    private void pingCommand(Message message) {
+        message.reply("Pong").queue();
+    }
+
+    private void helpCommand(Message message) {
         message.reply("Commands:\n" +
                 prefix + "help\n" +
                 "\t Usage:" + prefix + "help\n" +
@@ -63,5 +71,4 @@ public class BotListener implements EventListener {
                 "\t Description: sets the channel that the bot will send breach information to \n" +
                 "\t Example: " + prefix + "setchannel #general \n").queue();
     }
-
 }
