@@ -52,6 +52,9 @@ public class BotListener implements EventListener {
         }
 
         switch (messageParts[0].toLowerCase()){
+            case "-ping":
+                pingCommand(message);
+                break;
             case "-help":
                 helpCommand(message);
                 break;
@@ -69,7 +72,13 @@ public class BotListener implements EventListener {
 
 
     }
-
+    /**
+     * @param message message sent by the Discord user
+     * Will return the message 'Pong' as a sign that the bot is up-and-running!
+     */
+    private void pingCommand(Message message) {
+        message.reply("Pong").queue();
+    }
     /**
      * This function handles the help command
      * @param message the message sent by the user
