@@ -2,6 +2,7 @@ package listener;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
@@ -12,12 +13,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class BotListener implements EventListener {
     String prefix = "-";
     HashMap<String, ArrayList<User>> tracking_map = new HashMap<>();
     double days = 1;
     double min_interval = 0.5;
+    TextChannel channel;
 
     @Override
     public void onEvent(@NotNull GenericEvent event) {
@@ -58,7 +61,9 @@ public class BotListener implements EventListener {
             case "-setinterval":
                 setIntervalCommand(message, messageParts);
                 break;
-
+            case "-setchannel":
+                setChannel(message, messageParts);
+                break;
         }
 
 
@@ -117,7 +122,31 @@ public class BotListener implements EventListener {
         message.delete().queue();
 
     }
+    /**
+     * This function handles the setchannel command
+     *
+     * @param message the message sent by the user
+     * @param messageParts a string array representing the message sent by the user split up by spaces
+     */
+    private void setChannel(Message message, String[] messageParts){
+        if(messageParts.length != 2){
+            message.reply("Incorrect usage of " + prefix + "setchannel \n\t\tUsage: " + prefix + "setchannel {the text channel which is sent breach info}\n");
+        }else if (!message.getMember().hasPermission(Permission.ADMINISTRATOR)){
+            message.reply("To use this command, you must be an admin").queue();
+            return;
+        }
+        List<TextChannel> textChannels = message.getGuild().getTextChannelsByName(messageParts[1], true);
+        if(textChannels.size() < 1){
+            message.reply("No text channels with the name " + messageParts[1]).queue();
+            return;
+        }else if(textChannels.size() > 1){
+            message.reply("Multiple text channels with the name " + messageParts[1] + " please rename this text channel or select another one.").queue();
+            return;
+        }
+        channel = textChannels.get(0);
+        message.reply(messageParts[1] + " channel set" ).queue();
 
+    }
     /**
      * This function handles the setinterval command
      *
