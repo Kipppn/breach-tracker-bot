@@ -39,12 +39,12 @@ We originally had a command that allowed you to set the interval at which it wou
 
 After many hours into the hackathon, we realized that the Have I Been Pwned api wasn't free like we thought it was. We analyzed whether it would be worth it to continue with this idea and came to the conclusion that we would just pay one month for this hackathon and see if we want to continue later. Authenication for the Have I Been Pwned API was an extreme pain point for us as well. We had many bugs with adding it to the header of the request.
 
+We also unfortunatly had some issues with fetching breach information so only specific emails are tracked and dms. Typing the setchannel command will produced the message "No new Breaches since {date}" every time its supposed to check for new breaches.
 ## Accomplishments that we're proud of
 
 - We ended up getting the periodic task scheduler working with minimal bugs
 - All the commands provide a UI of some sort
-- Checking if a users email adresses have been breached recently works 
-
+- Checking if a users email adresses have been breached recently works!
 
 ## What we learned
 - Anticipate that errors and give ample time to fix them
@@ -56,3 +56,4 @@ After many hours into the hackathon, we realized that the Have I Been Pwned api 
 - Host the bot in the cloud so that the bot is on 24/7
 - Fetch Account names rather than just emails
 - Make sure emails are valid 
+- Fetch breach information to send to discord text channel
