@@ -3,7 +3,6 @@ package listener;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.DisconnectEvent;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
@@ -13,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class BotListener implements EventListener {
     String prefix = "-";
@@ -55,10 +53,10 @@ public class BotListener implements EventListener {
                 helpCommand(message);
                 break;
             case "-track":
-                track(message, messageParts);
+                trackCommand(message, messageParts);
                 break;
             case "-setinterval":
-                setInterval(message, messageParts);
+                setIntervalCommand(message, messageParts);
                 break;
 
         }
@@ -96,10 +94,10 @@ public class BotListener implements EventListener {
      * @param message the message sent by the user
      * @param messageParts a string array representing the message sent by the user split up by spaces
      */
-    private void track(Message message, String[] messageParts){
+    private void trackCommand(Message message, String[] messageParts){
         if(messageParts.length != 2){
             sendDM(message.getAuthor(), "Incorrect usage of " + prefix + "track \n\t\tUsage: " + prefix + "track {the email or account name you want to track}");
-            message.delete();
+            message.delete().queue();
             return;
         }
 
@@ -116,7 +114,7 @@ public class BotListener implements EventListener {
         }
 
 
-        message.delete();
+        message.delete().queue();
 
     }
 
@@ -126,7 +124,7 @@ public class BotListener implements EventListener {
      * @param message the message sent by the user
      * @param messageParts a string array representing the message sent by the user split up by spaces
      */
-    private void setInterval(Message message, String[] messageParts){
+    private void setIntervalCommand(Message message, String[] messageParts){
         if(messageParts.length != 2 ){
             message.reply("Incorrect Usage of " + prefix + "setinterval \n\t\tUsage: -setinterval {number of days}").queue();
             return;
