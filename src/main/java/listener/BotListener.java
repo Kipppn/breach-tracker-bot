@@ -41,7 +41,7 @@ public class BotListener implements EventListener {
      * This function determines which command the user has entered
      * @param event the event representing the user sending a message
      */
-    private void commandRouter(MessageReceivedEvent event){
+    private void commandRouter(MessageReceivedEvent event) {
         Message message = event.getMessage();
         String messageText = message.getContentRaw();
         String[] messageParts = messageText.split(" ");
@@ -49,7 +49,7 @@ public class BotListener implements EventListener {
             return;
         }
       
-        switch (messageParts[0].toLowerCase()){
+        switch (messageParts[0].toLowerCase()) {
             case "-ping":
                 pingCommand(message);
                 break;
@@ -67,14 +67,6 @@ public class BotListener implements EventListener {
                 break;
         }
     }
-
-    /**
-     * @param message message sent by the Discord user
-     * Will return the message 'Pong' as a sign that the bot is up-and-running!
-     */
-    private void pingCommand(Message message) {
-        message.reply("Pong").queue();
-    }
   
     /**
      * @param message message sent by the Discord user
@@ -87,7 +79,7 @@ public class BotListener implements EventListener {
      * This function handles the help command
      * @param message the message sent by the user
      */
-    private void helpCommand(Message message){
+    private void helpCommand(Message message) {
         message.reply("Commands:\n" +
                 prefix + "help\n" +
                 "\t Usage:" + prefix + "help\n" +
@@ -112,7 +104,7 @@ public class BotListener implements EventListener {
      * @param message the message sent by the user
      * @param messageParts a string array representing the message sent by the user split up by spaces
      */
-    private void trackCommand(Message message, String[] messageParts){
+    private void trackCommand(Message message, String[] messageParts) {
         if(messageParts.length != 2){
             sendDM(message.getAuthor(), "Incorrect usage of " + prefix + "track \n\t\tUsage: " + prefix + "track {the email or account name you want to track}");
             message.delete().queue();
@@ -141,7 +133,7 @@ public class BotListener implements EventListener {
      * @param message the message sent by the user
      * @param messageParts a string array representing the message sent by the user split up by spaces
      */
-    private void setChannel(Message message, String[] messageParts){
+    private void setChannel(Message message, String[] messageParts) {
         if(messageParts.length != 2){
             message.reply("Incorrect usage of " + prefix + "setchannel \n\t\tUsage: " + prefix + "setchannel {the text channel which is sent breach info}\n");
         }else if (!message.getMember().hasPermission(Permission.ADMINISTRATOR)){
@@ -166,7 +158,7 @@ public class BotListener implements EventListener {
      * @param message the message sent by the user
      * @param messageParts a string array representing the message sent by the user split up by spaces
      */
-    private void setIntervalCommand(Message message, String[] messageParts){
+    private void setIntervalCommand(Message message, String[] messageParts) {
         if(messageParts.length != 2 ){
             message.reply("Incorrect Usage of " + prefix + "setinterval \n\t\tUsage: -setinterval {number of days}").queue();
             return;
@@ -196,7 +188,7 @@ public class BotListener implements EventListener {
      * @param user The user to send a DM to
      * @param message The message you will send to the user
      */
-    private void sendDM(User user, String message){
+    private void sendDM(User user, String message) {
         user.openPrivateChannel().flatMap(channel -> channel.sendMessage(message)).queue();
     }
 }
