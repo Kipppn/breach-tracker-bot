@@ -1,5 +1,6 @@
 package listener;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.DisconnectEvent;
@@ -12,10 +13,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class BotListener implements EventListener {
     String prefix = "-";
     HashMap<String, ArrayList<User>> tracking_map = new HashMap<>();
+    double days = 1;
+    double min_interval = 0.5;
 
     @Override
     public void onEvent(@NotNull GenericEvent event) {
@@ -53,6 +57,9 @@ public class BotListener implements EventListener {
             case "-track":
                 track(message, messageParts);
                 break;
+            case "-setinterval":
+                setInterval(message, messageParts);
+                break;
 
         }
 
@@ -86,7 +93,7 @@ public class BotListener implements EventListener {
     /**
      * This function handles the track command
      *
-     * @param message a string representing the message sent by the user
+     * @param message the message sent by the user
      * @param messageParts a string array representing the message sent by the user split up by spaces
      */
     private void track(Message message, String[] messageParts){
@@ -111,6 +118,36 @@ public class BotListener implements EventListener {
 
         message.delete();
 
+    }
+
+    /**
+     * This function handles the setinterval command
+     *
+     * @param message the message sent by the user
+     * @param messageParts a string array representing the message sent by the user split up by spaces
+     */
+    private void setInterval(Message message, String[] messageParts){
+        if(messageParts.length != 2 ){
+            message.reply("Incorrect Usage of " + prefix + "setinterval \n\t\tUsage: -setinterval {number of days}").queue();
+            return;
+        } else if (!message.getMember().hasPermission(Permission.ADMINISTRATOR)){
+            message.reply("To use this command, you must be an admin").queue();
+            return;
+        }
+
+        double interval;
+        try {
+             interval = Double.parseDouble(messageParts[1]);
+        }catch (NumberFormatException e){
+            message.reply(messageParts[1] + " is not an number").queue();
+            return;
+        }
+        if(interval >= min_interval){
+            days = interval;
+            message.reply("Interval is now set to " + interval + " days").queue();
+        }else {
+            message.reply("Interval is shorter than 0.5 days which is too short").queue();
+        }
     }
 
     /**
