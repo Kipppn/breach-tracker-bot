@@ -5,6 +5,13 @@ Breach Tracker Bot is a discord bot that periodically sends information about an
 
 ### Commands
 
+-help: lists out all of the commands
+
+-track: notifies the bot that you want an account to be tracked in a breach and dms you if the account was in a recent breach every week
+
+-removetrack: notifies the bot you no longer want to recieve dms about a certain account
+
+-setchannel: sets a text channel where you want your server to recieve breach info weekly
 
 
 ## Inspiration
@@ -19,6 +26,9 @@ We thought that automating the process of periodically checking your breached ac
 The bot was built in Java using JDA. Like [pwnedBot](https://github.com/plasticuproject/pwnedBot), Breach Tracker Bot uses the [Have I Been Pwned](https://haveibeenpwned.com/) API to retreve breach information.
 
 ## Challenges we ran into
+
+###
+
 
 ## Accomplishments that we're proud of
 
