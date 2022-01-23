@@ -1,31 +1,39 @@
 package listener;
 
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class BotListener implements EventListener {
     String prefix = "-";
     HashMap<String, ArrayList<User>> tracking_map = new HashMap<>();
-    double days = 1;
-    double min_interval = 0.5;
-    TextChannel channel;
+    int days = 5;
+    int min_days = 1;
+    HashMap<String, TextChannel> trackingChannels = new HashMap<>();
+    Date prevBreachCheck;
+    TimerTask checkBreaches;
+    long unit_multiplier = 1000L/*60L /*60L*24L*/;
+    Timer timer = new Timer();
+
 
     @Override
     public void onEvent(@NotNull GenericEvent event) {
         if (event instanceof ReadyEvent) {
             System.out.println("***** BOT IS READY *****");
+            prevBreachCheck = Calendar.getInstance().getTime();
+            checkBreaches = checkBreaches();
+            timer.scheduleAtFixedRate(checkBreaches, 0, days * unit_multiplier);
         }
 
         if (event instanceof ShutdownEvent) {
@@ -34,6 +42,11 @@ public class BotListener implements EventListener {
 
         if (event instanceof MessageReceivedEvent) {
             commandRouter((MessageReceivedEvent) event);
+        }
+        if (event instanceof GuildJoinEvent){
+
+            Guild guild = ((GuildJoinEvent) event).getGuild();
+            trackingChannels.put(guild.getId(), guild.getTextChannels().get(0));
         }
     }
 
@@ -75,14 +88,7 @@ public class BotListener implements EventListener {
     private void pingCommand(Message message) {
         message.reply("Pong").queue();
     }
-  
-    /**
-     * @param message message sent by the Discord user
-     * Will return the message 'Pong' as a sign that the bot is up-and-running!
-     */
-    private void pingCommand(Message message) {
-        message.reply("Pong").queue();
-    }
+
     /**
      * This function handles the help command
      * @param message the message sent by the user
@@ -156,8 +162,8 @@ public class BotListener implements EventListener {
             message.reply("Multiple text channels with the name " + messageParts[1] + " please rename this text channel or select another one.").queue();
             return;
         }
-        channel = textChannels.get(0);
-        message.reply(messageParts[1] + " channel set" ).queue();
+        trackingChannels.put(message.getGuild().getId(), textChannels.get(0));
+        message.reply("Tracking information will now be set to the channel #"+ messageParts[1]).queue();
 
     }
     /**
@@ -175,18 +181,21 @@ public class BotListener implements EventListener {
             return;
         }
 
-        double interval;
+        int interval;
         try {
-             interval = Double.parseDouble(messageParts[1]);
+             interval = Integer.parseInt(messageParts[1]);
         }catch (NumberFormatException e){
             message.reply(messageParts[1] + " is not an number").queue();
             return;
         }
-        if(interval >= min_interval){
+        if(interval >= min_days){
             days = interval;
+            checkBreaches.cancel();
+            checkBreaches = checkBreaches();
+            timer.scheduleAtFixedRate(checkBreaches, 0, days * unit_multiplier);
             message.reply("Interval is now set to " + interval + " days").queue();
         }else {
-            message.reply("Interval is shorter than 0.5 days which is too short").queue();
+            message.reply("Interval is shorter than " +  min_days +  " days which is too short").queue();
         }
     }
 
@@ -198,5 +207,34 @@ public class BotListener implements EventListener {
      */
     private void sendDM(User user, String message){
         user.openPrivateChannel().flatMap(channel -> channel.sendMessage(message)).queue();
+    }
+
+    private void DMTrackedAccounts(){
+        String[] accounts =  tracking_map.keySet().toArray(new String[tracking_map.size()]);
+        for(int i = 0; i < accounts.length; i++){
+            ArrayList<User> userList = tracking_map.get(accounts[i]);
+            for(int j = 0; j < userList.size(); j++){
+                sendDM(userList.get(j), "No new breaches have occured on the account/email \"" + accounts[i] + "\" since " + prevBreachCheck.toString());
+            }
+        }
+    }
+
+    private TimerTask checkBreaches(){
+        return new TimerTask() {
+            @Override
+            public void run() {
+
+                DMTrackedAccounts();
+                sendTrackingMessageToChannels();
+                prevBreachCheck = Calendar.getInstance().getTime();
+            }
+        };
+    }
+
+    private void sendTrackingMessageToChannels(){
+        String[] guildIds = trackingChannels.keySet().toArray(new String[trackingChannels.size()]);
+        for(int i = 0; i < guildIds.length; i++){
+            trackingChannels.get(guildIds[i]).sendMessage("No new Breaches since " + prevBreachCheck.toString()).queue();
+        }
     }
 }
