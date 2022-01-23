@@ -16,7 +16,7 @@ We thought that automating the process of periodically checking your breached ac
 
 ## How we built it
 
-The bot was built in Java using JDA. Like pwnedBot, Breach Tracker Bot uses the "Have I Been Pwned" API to retreve breach information.
+The bot was built in Java using JDA. Like pwnedBot, Breach Tracker Bot uses the Have I Been Pwned API to retreve breach information.
 
 ## Challenges we ran into
 
