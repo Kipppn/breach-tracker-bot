@@ -16,11 +16,20 @@ import java.util.HashMap;
 import java.util.List;
 
 public class BotListener implements EventListener {
-    String prefix = "-";
-    HashMap<String, ArrayList<User>> tracking_map = new HashMap<>();
-    double days = 1;
-    double min_interval = 0.5;
-    TextChannel channel;
+    private String prefix = "-";
+    private HashMap<String, ArrayList<User>> tracking_map = new HashMap<>();
+    private double days = 1;
+    private double min_interval = 0.5;
+    private TextChannel channel;
+    private String key;
+
+    /**
+     * User passes in API Key; Quick and Dirty, not a fan, but for a demo, it's good to go!
+     * @param key
+     */
+    public BotListener(String key) {
+        this.key = key;
+    }
 
     @Override
     public void onEvent(@NotNull GenericEvent event) {
@@ -69,12 +78,13 @@ public class BotListener implements EventListener {
     }
   
     /**
-     * @param message message sent by the Discord user
      * Will return the message 'Pong' as a sign that the bot is up-and-running!
+     * @param message message sent by the Discord user
      */
     private void pingCommand(Message message) {
         message.reply("Pong").queue();
     }
+
     /**
      * This function handles the help command
      * @param message the message sent by the user
@@ -159,6 +169,7 @@ public class BotListener implements EventListener {
      * @param messageParts a string array representing the message sent by the user split up by spaces
      */
     private void setIntervalCommand(Message message, String[] messageParts) {
+        // TODO: Flip this IF-ELSEIF, We should check for permissions first before anything else is checked.
         if(messageParts.length != 2 ){
             message.reply("Incorrect Usage of " + prefix + "setinterval \n\t\tUsage: -setinterval {number of days}").queue();
             return;

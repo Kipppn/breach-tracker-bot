@@ -12,7 +12,7 @@ public class BreachTrackerBot {
 
     public static void main(String[] args) throws LoginException {
         JDABuilder builder = JDABuilder.createLight(args[0], GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
-                .addEventListeners(new BotListener())
+                .addEventListeners(new BotListener(args[1]))
                 .setStatus(OnlineStatus.ONLINE)
                 .setActivity(Activity.playing("searching for breaches"));
         builder.build();
