@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.temporal.ChronoUnit;
+
 public class BotListener implements EventListener {
     String prefix = "-";
     @Override
@@ -48,7 +50,7 @@ public class BotListener implements EventListener {
      * Will return the message 'Pong' as a sign that the bot is up-and-running!
      */
     private void pingCommand(Message message) {
-        message.reply("Pong!").queue();
+        message.reply("Pong").queue();
     }
 
     private void helpCommand(Message message) {
