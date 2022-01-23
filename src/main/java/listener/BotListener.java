@@ -19,7 +19,6 @@ public class BotListener implements EventListener {
     String prefix = "-";
     HashMap<String, ArrayList<User>> tracking_map = new HashMap<>();
     int days = 5;
-    int min_days = 1;
     HashMap<String, TextChannel> trackingChannels = new HashMap<>();
     Date prevBreachCheck;
     TimerTask checkBreaches;
@@ -72,8 +71,8 @@ public class BotListener implements EventListener {
             case "-track":
                 trackCommand(message, messageParts);
                 break;
-            case "-setinterval":
-                setIntervalCommand(message, messageParts);
+            case "-removetrack":
+                removeTrackCommand(message, messageParts);
                 break;
             case "-setchannel":
                 setChannel(message, messageParts);
@@ -102,10 +101,10 @@ public class BotListener implements EventListener {
                 "\t Usage: " + prefix + "track {the email or account name you want to track}\n" +
                 "\t Description: notifies you if the account name or email is in a recent breach after each breach check\n" +
                 "\t Example: " + prefix + "track email testemail@gmail.com \n"+
-                prefix + "setinterval\n" +
-                "\t Usage: " + prefix + "setinterval {number of days} \n" +
-                "\t Description: sets the amount of days it waits to checks for breaches \n" +
-                "\t Example: " + prefix + "setinterval 5 \n"+
+                prefix + "removeTrack\n" +
+                "\t Usage: " + prefix + "removetrack {the email or account name you want to track} \n" +
+                "\t Description: no longer notifies you if the account name or email is in a recent breach after each breach check \n" +
+                "\t Example: " + prefix + "removetrack email testemail@gmail.com  \n"+
                 prefix + "setchannel\n" +
                 "\t Usage: " + prefix + "setchannel {the text channel which is sent breach info}\n" +
                 "\t Description: sets the channel that the bot will send breach information to \n" +
@@ -166,39 +165,33 @@ public class BotListener implements EventListener {
         message.reply("Tracking information will now be set to the channel #"+ messageParts[1]).queue();
 
     }
-    /**
-     * This function handles the setinterval command
-     *
-     * @param message the message sent by the user
-     * @param messageParts a string array representing the message sent by the user split up by spaces
-     */
-    private void setIntervalCommand(Message message, String[] messageParts){
-        if(messageParts.length != 2 ){
-            message.reply("Incorrect Usage of " + prefix + "setinterval \n\t\tUsage: -setinterval {number of days}").queue();
-            return;
-        } else if (!message.getMember().hasPermission(Permission.ADMINISTRATOR)){
-            message.reply("To use this command, you must be an admin").queue();
+
+    private void removeTrackCommand(Message message, String[] messageParts){
+        if(messageParts.length != 2){
+            sendDM(message.getAuthor(), "Incorrect usage of " + prefix + "removetrack \n\t\tUsage: " + prefix + "removetrack {the email or account name you no longer want to track}");
+            message.delete().queue();
             return;
         }
 
-        int interval;
-        try {
-             interval = Integer.parseInt(messageParts[1]);
-        }catch (NumberFormatException e){
-            message.reply(messageParts[1] + " is not an number").queue();
+        ArrayList<User> users;
+        if (tracking_map.containsKey(messageParts[1])) {
+            users = tracking_map.get(messageParts[1]);
+        }else{
+            sendDM(message.getAuthor(), messageParts[1] + " wasn't being tracked");
+            message.delete().queue();
             return;
         }
-        if(interval >= min_days){
-            days = interval;
-            checkBreaches.cancel();
-            checkBreaches = checkBreaches();
-            timer.scheduleAtFixedRate(checkBreaches, 0, days * unit_multiplier);
-            message.reply("Interval is now set to " + interval + " days").queue();
-        }else {
-            message.reply("Interval is shorter than " +  min_days +  " days which is too short").queue();
+        if (!users.contains(message.getAuthor())){
+            sendDM(message.getAuthor(), messageParts[1] + " wasn't being tracked");
+        }else{
+            users.remove(message.getAuthor());
+            sendDM(message.getAuthor(), messageParts[1] + " is no longer being tracked");
         }
+
+
+        message.delete().queue();
+
     }
-
     /**
      * This function sends a dm to a specified user
      *
@@ -230,6 +223,7 @@ public class BotListener implements EventListener {
             }
         };
     }
+
 
     private void sendTrackingMessageToChannels(){
         String[] guildIds = trackingChannels.keySet().toArray(new String[trackingChannels.size()]);
