@@ -1,31 +1,38 @@
 package listener;
 
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class BotListener implements EventListener {
     String prefix = "-";
     HashMap<String, ArrayList<User>> tracking_map = new HashMap<>();
-    double days = 1;
-    double min_interval = 0.5;
-    TextChannel channel;
+    int days = 5;
+    HashMap<String, TextChannel> trackingChannels = new HashMap<>();
+    Date prevBreachCheck;
+    TimerTask checkBreaches;
+    long unit_multiplier = 1000L/*60L /*60L*24L*/;
+    Timer timer = new Timer();
+
 
     @Override
     public void onEvent(@NotNull GenericEvent event) {
         if (event instanceof ReadyEvent) {
             System.out.println("***** BOT IS READY *****");
+            prevBreachCheck = Calendar.getInstance().getTime();
+            checkBreaches = checkBreaches();
+            timer.scheduleAtFixedRate(checkBreaches, 0, days * unit_multiplier);
         }
 
         if (event instanceof ShutdownEvent) {
@@ -34,6 +41,11 @@ public class BotListener implements EventListener {
 
         if (event instanceof MessageReceivedEvent) {
             commandRouter((MessageReceivedEvent) event);
+        }
+        if (event instanceof GuildJoinEvent){
+
+            Guild guild = ((GuildJoinEvent) event).getGuild();
+            trackingChannels.put(guild.getId(), guild.getTextChannels().get(0));
         }
     }
 
@@ -59,8 +71,8 @@ public class BotListener implements EventListener {
             case "-track":
                 trackCommand(message, messageParts);
                 break;
-            case "-setinterval":
-                setIntervalCommand(message, messageParts);
+            case "-removetrack":
+                removeTrackCommand(message, messageParts);
                 break;
             case "-setchannel":
                 setChannel(message, messageParts);
@@ -75,14 +87,7 @@ public class BotListener implements EventListener {
     private void pingCommand(Message message) {
         message.reply("Pong").queue();
     }
-  
-    /**
-     * @param message message sent by the Discord user
-     * Will return the message 'Pong' as a sign that the bot is up-and-running!
-     */
-    private void pingCommand(Message message) {
-        message.reply("Pong").queue();
-    }
+
     /**
      * This function handles the help command
      * @param message the message sent by the user
@@ -96,10 +101,10 @@ public class BotListener implements EventListener {
                 "\t Usage: " + prefix + "track {the email or account name you want to track}\n" +
                 "\t Description: notifies you if the account name or email is in a recent breach after each breach check\n" +
                 "\t Example: " + prefix + "track email testemail@gmail.com \n"+
-                prefix + "setinterval\n" +
-                "\t Usage: " + prefix + "setinterval {number of days} \n" +
-                "\t Description: sets the amount of days it waits to checks for breaches \n" +
-                "\t Example: " + prefix + "setinterval 5 \n"+
+                prefix + "removeTrack\n" +
+                "\t Usage: " + prefix + "removetrack {the email or account name you want to track} \n" +
+                "\t Description: no longer notifies you if the account name or email is in a recent breach after each breach check \n" +
+                "\t Example: " + prefix + "removetrack email testemail@gmail.com  \n"+
                 prefix + "setchannel\n" +
                 "\t Usage: " + prefix + "setchannel {the text channel which is sent breach info}\n" +
                 "\t Description: sets the channel that the bot will send breach information to \n" +
@@ -156,40 +161,37 @@ public class BotListener implements EventListener {
             message.reply("Multiple text channels with the name " + messageParts[1] + " please rename this text channel or select another one.").queue();
             return;
         }
-        channel = textChannels.get(0);
-        message.reply(messageParts[1] + " channel set" ).queue();
+        trackingChannels.put(message.getGuild().getId(), textChannels.get(0));
+        message.reply("Tracking information will now be set to the channel #"+ messageParts[1]).queue();
 
     }
-    /**
-     * This function handles the setinterval command
-     *
-     * @param message the message sent by the user
-     * @param messageParts a string array representing the message sent by the user split up by spaces
-     */
-    private void setIntervalCommand(Message message, String[] messageParts){
-        if(messageParts.length != 2 ){
-            message.reply("Incorrect Usage of " + prefix + "setinterval \n\t\tUsage: -setinterval {number of days}").queue();
-            return;
-        } else if (!message.getMember().hasPermission(Permission.ADMINISTRATOR)){
-            message.reply("To use this command, you must be an admin").queue();
+
+    private void removeTrackCommand(Message message, String[] messageParts){
+        if(messageParts.length != 2){
+            sendDM(message.getAuthor(), "Incorrect usage of " + prefix + "removetrack \n\t\tUsage: " + prefix + "removetrack {the email or account name you no longer want to track}");
+            message.delete().queue();
             return;
         }
 
-        double interval;
-        try {
-             interval = Double.parseDouble(messageParts[1]);
-        }catch (NumberFormatException e){
-            message.reply(messageParts[1] + " is not an number").queue();
+        ArrayList<User> users;
+        if (tracking_map.containsKey(messageParts[1])) {
+            users = tracking_map.get(messageParts[1]);
+        }else{
+            sendDM(message.getAuthor(), messageParts[1] + " wasn't being tracked");
+            message.delete().queue();
             return;
         }
-        if(interval >= min_interval){
-            days = interval;
-            message.reply("Interval is now set to " + interval + " days").queue();
-        }else {
-            message.reply("Interval is shorter than 0.5 days which is too short").queue();
+        if (!users.contains(message.getAuthor())){
+            sendDM(message.getAuthor(), messageParts[1] + " wasn't being tracked");
+        }else{
+            users.remove(message.getAuthor());
+            sendDM(message.getAuthor(), messageParts[1] + " is no longer being tracked");
         }
+
+
+        message.delete().queue();
+
     }
-
     /**
      * This function sends a dm to a specified user
      *
@@ -198,5 +200,35 @@ public class BotListener implements EventListener {
      */
     private void sendDM(User user, String message){
         user.openPrivateChannel().flatMap(channel -> channel.sendMessage(message)).queue();
+    }
+
+    private void DMTrackedAccounts(){
+        String[] accounts =  tracking_map.keySet().toArray(new String[tracking_map.size()]);
+        for(int i = 0; i < accounts.length; i++){
+            ArrayList<User> userList = tracking_map.get(accounts[i]);
+            for(int j = 0; j < userList.size(); j++){
+                sendDM(userList.get(j), "No new breaches have occured on the account/email \"" + accounts[i] + "\" since " + prevBreachCheck.toString());
+            }
+        }
+    }
+
+    private TimerTask checkBreaches(){
+        return new TimerTask() {
+            @Override
+            public void run() {
+
+                DMTrackedAccounts();
+                sendTrackingMessageToChannels();
+                prevBreachCheck = Calendar.getInstance().getTime();
+            }
+        };
+    }
+
+
+    private void sendTrackingMessageToChannels(){
+        String[] guildIds = trackingChannels.keySet().toArray(new String[trackingChannels.size()]);
+        for(int i = 0; i < guildIds.length; i++){
+            trackingChannels.get(guildIds[i]).sendMessage("No new Breaches since " + prevBreachCheck.toString()).queue();
+        }
     }
 }
