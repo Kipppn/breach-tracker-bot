@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
 
 public class BotListener implements EventListener {
-    String prefix = "!";
+    String prefix = "-";
     @Override
     public void onEvent(@NotNull GenericEvent event) {
         if (event instanceof ReadyEvent) {
@@ -36,9 +36,10 @@ public class BotListener implements EventListener {
         switch (messageText.toLowerCase()) {
             case "-ping":
                 pingCommand(message);
+                break;
             case "-help":
                 helpCommand(message);
-
+                break;
         }
     }
 
@@ -47,7 +48,7 @@ public class BotListener implements EventListener {
      * Will return the message 'Pong' as a sign that the bot is up-and-running!
      */
     private void pingCommand(Message message) {
-        message.reply("Pong!");
+        message.reply("Pong!").queue();
     }
 
     private void helpCommand(Message message) {
