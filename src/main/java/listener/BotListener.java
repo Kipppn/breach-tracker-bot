@@ -33,9 +33,7 @@ public class BotListener implements EventListener {
         }
 
         if (event instanceof MessageReceivedEvent) {
-            // TODO: Implement PING command (for health check of bot)
             commandRouter((MessageReceivedEvent) event);
-//            String msg = ((MessageReceivedEvent) event).getMessage().getContentRaw();
         }
     }
 
@@ -50,7 +48,7 @@ public class BotListener implements EventListener {
         if(!messageText.substring(0, 1).equals(prefix)) {
             return;
         }
-
+      
         switch (messageParts[0].toLowerCase()){
             case "-ping":
                 pingCommand(message);
@@ -68,10 +66,16 @@ public class BotListener implements EventListener {
                 setChannel(message, messageParts);
                 break;
         }
-
-
-
     }
+
+    /**
+     * @param message message sent by the Discord user
+     * Will return the message 'Pong' as a sign that the bot is up-and-running!
+     */
+    private void pingCommand(Message message) {
+        message.reply("Pong").queue();
+    }
+  
     /**
      * @param message message sent by the Discord user
      * Will return the message 'Pong' as a sign that the bot is up-and-running!
@@ -195,6 +199,4 @@ public class BotListener implements EventListener {
     private void sendDM(User user, String message){
         user.openPrivateChannel().flatMap(channel -> channel.sendMessage(message)).queue();
     }
-
-
 }
